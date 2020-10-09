@@ -48,18 +48,20 @@ def ConvertToThreeCoulmnsInput(inputfilename, outputfilename='', outputfilepath=
         outputfilename = outputfilepath + outputfilename
         print(("Converting input file " + inputfilename + " to intermediate three columns input file " + outputfilename + " in path " + outputfilepath + " ..."))
     
+    #read file into pandas dataframe
     table = pd.read_csv(inputfilename)  
+    #create column that is term_ID but without GO: and leading zeroes
     table['term_ID_int'] = [int(item.split(':')[1]) for item in table.term_ID]
-    
+    # replace numeric reference to GO id with corresponding textual description
     table['representative'] = \
         [table[table['term_ID_int']==representative].description.values[0] for representative in table.representative]
+    # rename column
     table.rename(columns= {'log10 p-value':'log10pvalue'},inplace=True)
+    # convert log10pvalue values to their absoulute values
     table['log10pvalue'] = abs(table['log10pvalue'])
+    # save only three columns to _converted.csv for further preprocessing
     table[['description', 'log10pvalue', 'representative']].to_csv(outputfilename,index=False, sep='\t')
 
-    # table['term_ID','log10pvalues','rep'].to_csv(outputfilename)
-
-    
     # # open output file
     # with open(outputfilename, 'w') as outputFile:     # 'wb' is changed to 'w'
     #     outputFileWriter = csv.writer(outputFile, delimiter="\t")  
