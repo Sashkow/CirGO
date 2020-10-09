@@ -39,6 +39,7 @@
 from operator import abs
 import csv
 import os.path
+import pandas as pd
 
 def ConvertToThreeCoulmnsInput(inputfilename, outputfilename='', outputfilepath=''):
     if (outputfilename == ''):
@@ -46,42 +47,54 @@ def ConvertToThreeCoulmnsInput(inputfilename, outputfilename='', outputfilepath=
         outputfilename = outputfilename + "_converted.csv"
         outputfilename = outputfilepath + outputfilename
         print(("Converting input file " + inputfilename + " to intermediate three columns input file " + outputfilename + " in path " + outputfilepath + " ..."))
+    
+    table = pd.read_csv(inputfilename)  
+    table['term_ID_int'] = [int(item.split(':')[1]) for item in table.term_ID]
+    
+    table['representative'] = \
+        [table[table['term_ID_int']==representative].description.values[0] for representative in table.representative]
+    table.rename(columns= {'log10 p-value':'log10pvalue'},inplace=True)
+    table['log10pvalue'] = abs(table['log10pvalue'])
+    table[['description', 'log10pvalue', 'representative']].to_csv(outputfilename,index=False, sep='\t')
+
+    # table['term_ID','log10pvalues','rep'].to_csv(outputfilename)
+
+    
+    # # open output file
+    # with open(outputfilename, 'w') as outputFile:     # 'wb' is changed to 'w'
+    #     outputFileWriter = csv.writer(outputFile, delimiter="\t")  
         
-    # open output file
-    with open(outputfilename, 'w') as outputFile:     # 'wb' is changed to 'w'
-        outputFileWriter = csv.writer(outputFile, delimiter="\t")  
-        
-        # open input file
-        with open(inputfilename) as inputFile:
-            inputFileReader = csv.reader(inputFile, delimiter=',')
+    #     # open input file
+    #     with open(inputfilename) as inputFile:
+    #         inputFileReader = csv.reader(inputFile, delimiter=',')
             
-            # skip all rows that contain comments and begin with '%' at the beginning of the file
-            x=next(inputFileReader)
-            while (x[0].startswith("%")):
-                x=next(inputFileReader)
-                print ("Skipping comments in header...")
+    #         # skip all rows that contain comments and begin with '%' at the beginning of the file
+    #         x=next(inputFileReader)
+    #         while (x[0].startswith("%")):
+    #             x=next(inputFileReader)
+    #             print ("Skipping comments in header...")
                 
-            # skip the header for further processing, but write it into the output file
-            outputFileWriter.writerow([x[1], x[3], x[6]])   
+    #         # skip the header for further processing, but write it into the output file
+    #         outputFileWriter.writerow([x[1], x[3], x[6]])   
             
-            for row in inputFileReader:
-                # skip eventual comment lines that are contained inside the csv file
-                if not row[0].startswith("%"):
-                    # perform data cleaning upon special characters
-                    # - replace any eventual " in the term_ID
+    #         for row in inputFileReader:
+    #             # skip eventual comment lines that are contained inside the csv file
+    #             if not row[0].startswith("%"):
+    #                 # perform data cleaning upon special characters
+    #                 # - replace any eventual " in the term_ID
                     
-                    row[1] = row[1].replace("\"", "")
-                    # - convert log10pvalues to absolute values
-                    row[3]  = abs(float(row[3]))
-                    # - replace any eventual " in the representative
-                    row[6] = row[6].replace("\"", "")
+    #                 row[1] = row[1].replace("\"", "")
+    #                 # - convert log10pvalues to absolute values
+    #                 row[3]  = abs(float(row[3]))
+    #                 # - replace any eventual " in the representative
+    #                 row[6] = row[6].replace("\"", "")
                     
-                    # write the final output file
-                    outputFileWriter.writerow([row[1], row[3], row[6]])
+    #                 # write the final output file
+    #                 outputFileWriter.writerow([row[1], row[3], row[6]])
                     
-            inputFile.close()
-        outputFile.close()
-        print(("Input file " + inputfilename + " cleaned and converted to tab deliminated file " + outputfilename + " in path " + outputfilepath + " ..."))
+    #         inputFile.close()
+    #     outputFile.close()
+    #     print(("Input file " + inputfilename + " cleaned and converted to tab deliminated file " + outputfilename + " in path " + outputfilepath + " ..."))
 
 
 
